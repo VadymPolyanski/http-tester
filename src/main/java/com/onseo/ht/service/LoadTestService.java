@@ -8,22 +8,22 @@ import java.util.stream.IntStream;
 
 import static com.onseo.ht.util.Const.AVAILABLE_THREADS;
 import static com.onseo.ht.util.Const.REQUESTS_PER_SECOND;
-import static com.onseo.ht.util.ProgramState.setStartTime;
+import static com.onseo.ht.util.ProgramState.writeStartTime;
 
 public class LoadTestService implements ILoadTestService {
 
     @Override
     public void doLoadTesting() {
 
-        ExecutorService threadExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
+        ExecutorService testExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
 
         int requestsCountForOneThread = REQUESTS_PER_SECOND / AVAILABLE_THREADS;
 
-        setStartTime(System.currentTimeMillis());
+        writeStartTime();
 
-        IntStream.range(0, AVAILABLE_THREADS + 1)
-                .forEach( i -> threadExecutor.execute(new VertxThread(requestsCountForOneThread)));
+        IntStream.range(0, AVAILABLE_THREADS)
+                .forEach( i -> testExecutor.execute(new VertxThread(requestsCountForOneThread)));
 
-        threadExecutor.shutdown();
+        testExecutor.shutdown();
     }
 }

@@ -18,16 +18,16 @@ public class ProgramState {
         return finishedThreads;
     }
 
-    public static void setFinishedThreads(Integer finishedThreads) {
-        ProgramState.finishedThreads = finishedThreads;
+    public static void incrementFinishedThreads() {
+        finishedThreads = finishedThreads + 1;
     }
 
     public static Long getStartTime() {
         return startTime;
     }
 
-    public static void setStartTime(Long startTime) {
-        ProgramState.startTime = startTime;
+    public static void writeStartTime() {
+        ProgramState.startTime = System.currentTimeMillis();
     }
 
     public static void addVertx(Vertx vertx) {
@@ -35,8 +35,6 @@ public class ProgramState {
     }
 
     public static void closeVertexes() {
-        for (Vertx vertx : vertxes) {
-            vertx.close();
-        }
+        vertxes.forEach(Vertx::close);
     }
 }
