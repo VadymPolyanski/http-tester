@@ -1,46 +1,42 @@
 package com.onseo.ht.vertx;
 
+import com.onseo.ht.data.ThreadState;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.LongStream;
 
-import static com.onseo.ht.service.StatisticService.setStatistic;
-import static com.onseo.ht.util.Const.BAD_RESPONSE;
-import static com.onseo.ht.util.Const.MAX_POOL_SIZE;
-import static com.onseo.ht.util.Const.URL;
+import static com.onseo.ht.data.Const.BAD_RESPONSE;
 
 public class VertxHttpClient extends AbstractVerticle {
 
-    private final int requestsPerSecond;
-    private final List<Integer> responses = new LinkedList<>();
-    private final HttpClientOptions options= new HttpClientOptions()
-            .setKeepAlive(true)
-            .setMaxPoolSize(MAX_POOL_SIZE);
+    private final ThreadState threadState;
+
+    private HttpClientOptions options;
+
     private HttpClient httpClient;
 
-    VertxHttpClient(int requestsPerSecond) {
+    VertxHttpClient(ThreadState threadState) {
         super();
-        this.requestsPerSecond = requestsPerSecond;
+        this.threadState = threadState;
+
+        options = new HttpClientOptions()
+                .setKeepAlive(true)
+                .setMaxPoolSize(threadState.getMaxPoolSize());
     }
 
     @Override
     public void start() {
+
         httpClient = vertx.createHttpClient(options);
 
-        LongStream.range(0, requestsPerSecond).forEach(i ->
-                httpClient.getAbs(URL, httpClientResponse -> responses.add(httpClientResponse.statusCode()))
-                        .exceptionHandler(throwable -> responses.add(BAD_RESPONSE))
-                        .endHandler(handler -> isThreadFinished())
-                        .end());
-    }
+        threadState.setStartTime(System.currentTimeMillis());
 
-    private void isThreadFinished() {
-        if (responses.size() == requestsPerSecond)
-            setStatistic(responses);
+        LongStream.range(0, threadState.getRps()).forEach(i -> //send requests in loop
+                httpClient.getAbs(threadState.getUrl(), httpClientResponse -> threadState.addResponse(httpClientResponse.statusCode()))
+                        .exceptionHandler(throwable -> threadState.addResponse(BAD_RESPONSE))
+                        .end());
     }
 
     @Override

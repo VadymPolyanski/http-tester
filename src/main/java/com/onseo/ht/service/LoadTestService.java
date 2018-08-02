@@ -1,28 +1,39 @@
 package com.onseo.ht.service;
 
+import com.onseo.ht.data.ThreadState;
 import com.onseo.ht.vertx.VertxThread;
 
+import javax.net.ssl.SSLContext;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
-import static com.onseo.ht.util.Const.AVAILABLE_THREADS;
-import static com.onseo.ht.util.Const.REQUESTS_PER_SECOND;
-import static com.onseo.ht.util.ProgramState.writeStartTime;
+public class LoadTestService {
 
-public class LoadTestService implements ILoadTestService {
 
-    @Override
+    private Integer availableThreads;
+
+    public LoadTestService(PropertiesService propertiesService, Integer availableThreads) {
+        this.propertiesService = propertiesService;
+        this.availableThreads = availableThreads;
+    }
+
+    private PropertiesService propertiesService;
+
     public void doLoadTesting() {
 
-        ExecutorService testExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
+        ExecutorService testExecutor = Executors.newFixedThreadPool(availableThreads);
 
-        int requestsCountForOneThread = REQUESTS_PER_SECOND / AVAILABLE_THREADS;
 
-        writeStartTime();
+        int rpsForOneThread = propertiesService.getRps() / availableThreads; //divide all rps requests for all threads
+        String url = propertiesService.gerURL();
+        Integer maxPoolSize = propertiesService.gerMaxPoolSize();
 
-        IntStream.range(0, AVAILABLE_THREADS)
-                .forEach( i -> testExecutor.execute(new VertxThread(requestsCountForOneThread)));
+        StatisticService.init(availableThreads);
+
+        IntStream.range(0, availableThreads)
+                .forEach( i -> testExecutor.execute(
+                        new VertxThread(new ThreadState(rpsForOneThread, url, maxPoolSize))));
 
         testExecutor.shutdown();
     }

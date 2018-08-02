@@ -1,20 +1,20 @@
 package com.onseo.ht.vertx;
 
+import com.onseo.ht.data.ThreadState;
 import io.vertx.core.Vertx;
 
-import static com.onseo.ht.util.ProgramState.addVertx;
 
 public class VertxThread implements Runnable {
 
-    private final int requestsPerSecond;
-    public VertxThread(int requestsPerSecond) {
-        this.requestsPerSecond = requestsPerSecond;
+    private ThreadState threadState;
+    public VertxThread(ThreadState threadState) {
+        this.threadState = threadState;
     }
 
     @Override
     public void run() {
         Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(new VertxHttpClient(requestsPerSecond));
-        addVertx(vertx);
+        threadState.setCurrentVertx(vertx);
+        vertx.deployVerticle(new VertxHttpClient(threadState));
     }
 }
