@@ -33,6 +33,4 @@ public class PropertiesService {
         }
         return instance;
     }
-
-
 }

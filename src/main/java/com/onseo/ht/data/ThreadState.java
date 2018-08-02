@@ -16,19 +16,16 @@ public class ThreadState {
     private Long startTime;
     private List<Integer> responses;
 
-    public ThreadState(Integer rps, String url, Integer maxPoolSize) {
+    public ThreadState(Integer rps, String url, Integer maxPoolSize, Vertx currentVertx) {
         this.rps = rps;
         this.url = url;
         this.maxPoolSize = maxPoolSize;
+        this.currentVertx = currentVertx;
         this.responses = new LinkedList<>();
     }
 
     public Vertx getCurrentVertx() {
         return currentVertx;
-    }
-
-    public void setCurrentVertx(Vertx currentVertx) {
-        this.currentVertx = currentVertx;
     }
 
     public Integer getRps() {
@@ -61,13 +58,17 @@ public class ThreadState {
 
     public void addResponse(Integer response) {
         this.responses.add(response);
-        if (responses.size() == rps) {
-            finishTime = System.currentTimeMillis();
+        if (canFinish()) {
             finish();
         }
     }
 
+    private boolean canFinish() {
+        return responses.size() == rps;
+    }
+
     private void finish() {
+        finishTime = System.currentTimeMillis();
         StatisticService.getInstance().reportFinish(this);
     }
 }
