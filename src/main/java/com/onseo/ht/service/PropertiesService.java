@@ -1,24 +1,36 @@
 package com.onseo.ht.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import static com.onseo.ht.util.Const.PROPERTY_FILE_NAME;
-import static com.sun.org.apache.xml.internal.utils.LocaleUtility.EMPTY_STRING;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 public class PropertiesService {
+    private final String PROPERTY_FILE_NAME = "app.conf";
 
-    public static synchronized String getProperty(String name) {
-        Properties prop = new Properties();
-        try(InputStream input = PropertiesService.class.getClassLoader().getResourceAsStream(PROPERTY_FILE_NAME)) {
+    private final String RPS_PROPERTY_NAME = "rps.number";
+    private final String URL_PROPERTY_NAME = "url.name";
+    private final String POOL_SIZE_PROPERTY_NAME = "httpPool.size";
 
-            prop.load(input);
-           return prop.getProperty(name);
+    private Config config = ConfigFactory.parseResources(PROPERTY_FILE_NAME);
+    private static PropertiesService instance;
 
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return EMPTY_STRING;
+    private PropertiesService() {}
+
+    public Integer getRps() {
+        return config.getInt(RPS_PROPERTY_NAME);
+    }
+
+    public String gerURL() {
+        return config.getString(URL_PROPERTY_NAME);
+    }
+
+    public Integer gerMaxPoolSize() {
+        return config.getInt(POOL_SIZE_PROPERTY_NAME);
+    }
+
+    public static PropertiesService getInstance() {
+        if (instance == null) {
+            instance = new PropertiesService();
         }
+        return instance;
     }
 }

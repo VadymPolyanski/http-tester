@@ -1,29 +1,44 @@
 package com.onseo.ht.service;
 
+import com.onseo.ht.data.ThreadState;
 import com.onseo.ht.vertx.VertxThread;
+import io.vertx.core.Vertx;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static com.onseo.ht.util.Const.AVAILABLE_THREADS;
-import static com.onseo.ht.util.Const.REQUESTS_PER_SECOND;
-import static com.onseo.ht.util.ProgramState.writeStartTime;
+public class LoadTestService {
 
-public class LoadTestService implements ILoadTestService {
+    private static final Integer AVAILABLE_THREADS = Runtime.getRuntime().availableProcessors();
+    private static final Integer INTERVAL = 1;
 
-    @Override
+    public LoadTestService(PropertiesService propertiesService) {
+        this.propertiesService = propertiesService;
+    }
+
+    private PropertiesService propertiesService;
+
     public void doLoadTesting() {
+        int rpsForOneThread = propertiesService.getRps() / AVAILABLE_THREADS; //divide all rps requests for all threads
+        String url = propertiesService.gerURL();
+        Integer maxPoolSize = propertiesService.gerMaxPoolSize();
 
-        ExecutorService testExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
 
-        int requestsCountForOneThread = REQUESTS_PER_SECOND / AVAILABLE_THREADS;
 
-        writeStartTime();
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
-        IntStream.range(0, AVAILABLE_THREADS)
-                .forEach( i -> testExecutor.execute(new VertxThread(requestsCountForOneThread)));
+        service.scheduleAtFixedRate(() -> {
+            StatisticService.init(AVAILABLE_THREADS);
+            ExecutorService testExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
 
-        testExecutor.shutdown();
+            IntStream.range(0, AVAILABLE_THREADS)
+                    .forEach(i -> testExecutor.execute(
+                            new VertxThread(new ThreadState(rpsForOneThread, url, maxPoolSize, Vertx.vertx()))));
+
+            testExecutor.shutdown();
+        }, 0, INTERVAL, TimeUnit.SECONDS);
     }
 }
