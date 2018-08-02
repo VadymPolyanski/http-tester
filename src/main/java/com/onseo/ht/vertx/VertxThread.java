@@ -5,11 +5,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
 
-
-import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.LongStream;
 
 import static com.onseo.ht.data.Const.BAD_RESPONSE;
