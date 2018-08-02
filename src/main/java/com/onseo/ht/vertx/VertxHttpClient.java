@@ -28,7 +28,6 @@ public class VertxHttpClient extends AbstractVerticle {
 
     @Override
     public void start() {
-
         httpClient = vertx.createHttpClient(options);
 
         threadState.setStartTime(System.currentTimeMillis());

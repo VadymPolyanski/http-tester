@@ -32,9 +32,9 @@ public class StatisticService {
 
         if (availableThreads.equals(0)) { //all threads have finished
             generateAndPrintStatistic(state.getFinishTime());
-        } else {
-            state.getCurrentVertx().close();
         }
+        state.getCurrentVertx().close();
+
     }
 
     private void generateAndPrintStatistic(long finishTime) {
