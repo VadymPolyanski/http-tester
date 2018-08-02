@@ -4,34 +4,31 @@ import com.onseo.ht.data.ThreadState;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import static com.onseo.ht.data.Const.BAD_RESPONSE;
-import static com.onseo.ht.data.Const.SUCCESS_RESPONSE;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class StatisticService {
 
-    private Integer availableThreads;
+    private AtomicInteger availableThreads;
     private Long startTime;
     private Long finishTime;
     private List<Integer> allResponses = new LinkedList<>();
 
-    private static StatisticService instance;
+    private PrintService printService;
 
-    private StatisticService(Integer availableThreads) {
-        this.availableThreads = availableThreads;
+    public StatisticService(Integer availableThreads) {
+        this.availableThreads = new AtomicInteger(availableThreads);
+        this.printService = new PrintService();
     }
 
 
     public synchronized void reportFinish(ThreadState state) {
-        availableThreads--;
-
         if (startTime == null) {
             startTime = state.getStartTime();
         }
 
         allResponses.addAll(state.getResponses());
 
-        if (availableThreads.equals(0)) { //all threads have finished
+        if (availableThreads.decrementAndGet() == 0 ) { //all threads have finished
             finishTime = state.getFinishTime();
             generateAndPrintStatistic();
         }
@@ -40,32 +37,12 @@ public class StatisticService {
     }
 
     private void generateAndPrintStatistic() {
-        Long time = (finishTime - startTime) / 1000;
-        if (time < 1L) {
-            time = 1L;
+        Integer time = Math.toIntExact((finishTime - startTime) / 1000);
+        if (time < 1) {
+            time = 1;
         }
         Integer count = allResponses.size();
-        Long countPerSecond = count / time;
-
-        String result = "All threads = " + availableThreads + "\n" +
-                "All requests = " + count + "\n" +
-                "Time = " + time + "\n" +
-                "Requests per second " + countPerSecond + "\n" +
-                "SUCCESS responses: " + allResponses.stream().filter(SUCCESS_RESPONSE::equals).count() + "\n" +
-                "FAIL responses: " + allResponses.stream().filter(BAD_RESPONSE::equals).count() + "\n\n\n";
-
-        System.out.println(result);
-    }
-
-    static StatisticService init(Integer availableThreads) {
-        instance = new StatisticService(availableThreads);
-        return instance;
-    }
-
-    public static StatisticService getInstance() {
-        if (instance == null) {
-            return init(Runtime.getRuntime().availableProcessors()); // bad case
-        }
-        return instance;
+        Integer countPerSecond = count / time;
+        printService.print(count, time, countPerSecond, allResponses);
     }
 }

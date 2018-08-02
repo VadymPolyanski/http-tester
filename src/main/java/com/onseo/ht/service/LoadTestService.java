@@ -26,17 +26,15 @@ public class LoadTestService {
         String url = propertiesService.gerURL();
         Integer maxPoolSize = propertiesService.gerMaxPoolSize();
 
-
-
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
         service.scheduleAtFixedRate(() -> {
-            StatisticService.init(AVAILABLE_THREADS);
+            StatisticService statisticService = new StatisticService(AVAILABLE_THREADS);
             ExecutorService testExecutor = Executors.newFixedThreadPool(AVAILABLE_THREADS);
 
             IntStream.range(0, AVAILABLE_THREADS)
                     .forEach(i -> testExecutor.execute(
-                            new VertxThread(new ThreadState(rpsForOneThread, url, maxPoolSize, Vertx.vertx()))));
+                            new VertxThread(new ThreadState(rpsForOneThread, url, maxPoolSize, Vertx.vertx(), statisticService))));
 
             testExecutor.shutdown();
         }, 0, INTERVAL, TimeUnit.SECONDS);

@@ -9,6 +9,7 @@ import java.util.List;
 public class ThreadState {
 
     private Vertx currentVertx;
+    private StatisticService statisticService;
     private Integer rps;
     private String url;
     private Integer maxPoolSize;
@@ -16,11 +17,12 @@ public class ThreadState {
     private Long startTime;
     private List<Integer> responses;
 
-    public ThreadState(Integer rps, String url, Integer maxPoolSize, Vertx currentVertx) {
+    public ThreadState(Integer rps, String url, Integer maxPoolSize, Vertx currentVertx, StatisticService statisticService) {
         this.rps = rps;
         this.url = url;
         this.maxPoolSize = maxPoolSize;
         this.currentVertx = currentVertx;
+        this.statisticService = statisticService;
         this.responses = new LinkedList<>();
     }
 
@@ -69,6 +71,6 @@ public class ThreadState {
 
     private void finish() {
         finishTime = System.currentTimeMillis();
-        StatisticService.getInstance().reportFinish(this);
+        statisticService.reportFinish(this);
     }
 }

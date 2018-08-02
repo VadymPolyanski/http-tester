@@ -43,7 +43,6 @@ public class VertxThread implements Runnable {
 
             LongStream.range(0, threadState.getRps()).forEach(i -> //send requests in loop
                     httpClient.getAbs(threadState.getUrl(), httpClientResponse -> threadState.addResponse(httpClientResponse.statusCode()))
-
                             .exceptionHandler(throwable -> threadState.addResponse(BAD_RESPONSE))
                             .end());
         }

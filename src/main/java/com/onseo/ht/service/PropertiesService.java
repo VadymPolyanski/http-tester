@@ -11,9 +11,6 @@ public class PropertiesService {
     private final String POOL_SIZE_PROPERTY_NAME = "httpPool.size";
 
     private Config config = ConfigFactory.parseResources(PROPERTY_FILE_NAME);
-    private static PropertiesService instance;
-
-    private PropertiesService() {}
 
     public Integer getRps() {
         return config.getInt(RPS_PROPERTY_NAME);
@@ -25,12 +22,5 @@ public class PropertiesService {
 
     public Integer gerMaxPoolSize() {
         return config.getInt(POOL_SIZE_PROPERTY_NAME);
-    }
-
-    public static PropertiesService getInstance() {
-        if (instance == null) {
-            instance = new PropertiesService();
-        }
-        return instance;
     }
 }
